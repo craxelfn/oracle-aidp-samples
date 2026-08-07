@@ -88,6 +88,20 @@ bundle.yaml
 # local tenant profiles (bootstrap-pinned fingerprints) — never commit
 profiles/
 
+# ...BUT the shipped placeholder templates and test fixtures MUST be committed.
+# `init` copies examples/<template>/{bundle,aidp.config}.yaml to scaffold a new
+# project, and the unit suite reads tests/fixtures/**; without these negations
+# the blanket rules above silently drop them from the commit, which breaks
+# `aidp-fusion-autopilot init` for every installed copy and reds ~30 tests.
+# These files contain placeholders only — no tenant hosts, users, or secrets.
+!examples/**/aidp.config.yaml
+!examples/**/bundle.yaml
+!examples/profiles/
+!examples/profiles/**
+!tests/fixtures/**/bundle.yaml
+!tests/fixtures/**/profiles/
+!tests/fixtures/**/profiles/**
+
 # OAC workbook authoring (workbooks/<name>/) — the generated workbook JSON and
 # any *bound* request carry the OAC host / dataset UUID / session tokens. Keep
 # those raw artifacts local; commit only *.redacted.json (and your request.json
