@@ -97,7 +97,8 @@ Workbench. After that, adding an ADW is four secrets and one line of YAML.
 
 ### Step 1 - Create the wallet bucket
 
-Only needed if your ADWs require mTLS. In the OCI Console: **Object Storage -> Buckets ->
+**Skip this step entirely if you set `flags.use_wallet: false`** - see
+[Walletless TLS](#walletless-tls). Only needed if your ADWs require mTLS. In the OCI Console: **Object Storage -> Buckets ->
 Create Bucket**, in the compartment where you keep this deployment.
 
 | Field | Value |
@@ -152,10 +153,7 @@ allow any-user to read objects in compartment id <COMPARTMENT_OCID> where all { 
 You need a Vault with a master encryption key. In **Identity & Security -> Vault -> your vault
 -> Secrets -> Create Secret**, create one secret per value below.
 
-**One secret holds one value. Never a JSON document with several fields.** The AIDP masking
-layer redacts exactly the string that `secrets.get()` returned, so a pure value shows up as
-`[REDACTED]` if it is ever printed by accident. A value parsed out of a JSON blob would leak
-into the notebook output in clear.
+**One secret holds one value. Never a JSON document with several fields.**
 
 **Service account secrets** - four, sharing a prefix of your choice. `demo_oci` is used throughout
 this documentation:
@@ -186,17 +184,16 @@ that ADW's name in every log line, so pick something recognisable:
 | `demo_adw1_pwd` | password of the ADW administrative user | whoever provisioned the ADW |
 | `demo_adw1_wallet_pwd` | password set when the wallet was downloaded | whoever downloaded the wallet |
 
+The two `wallet_*` secrets are **only read when `flags.use_wallet` is true**. With walletless
+TLS each ADW needs just `_dsn` and `_pwd`, so a two-ADW fleet drops from 12 secrets to 8.
+
 Repeat for `demo_adw2`, `demo_adw3` and so on.
 
 At two ADWs that is **12 secrets**: 4 for the service account plus 4 per ADW.
 
-**What must NOT become a secret.** The masking layer redacts any exact occurrence of a value
-that passed through `secrets.get()`. Storing short, common values poisons the entire log: with
-`ADMIN` in the vault, `SELECT user FROM dual`, error messages and `all_users` listings all print
-as `[REDACTED]` and the notebook becomes impossible to debug. So the ADW administrative user
-name lives in `adw_sync.yaml` under `adw_user`, and the ADW display name is derived from the
-prefix. Rule of thumb: **a short, common value, or one that appears in logs, does not belong in
-the vault.**
+**What must NOT become a secret.** The ADW administrative user name is not a secret: it lives
+in `adw_sync.yaml` under `adw_user`, and the ADW display name is derived from the prefix. Rule of
+thumb: **a short, common value, or one that appears in logs, does not belong in the vault.**
 
 The wallet **files** do not belong there either - they exceed the 25 KB secret limit. Only the
 path and the password go to the Vault.
@@ -322,19 +319,22 @@ Two situations where it **stops instead of choosing**, both deliberately:
 
 ## Adding a new ADW
 
-Four secrets, four credentials, one line of YAML. No code change.
+Two secrets, two credentials, one line of YAML. No code change. (Four and four if
+`flags.use_wallet` is true — see [Walletless TLS](#walletless-tls).)
 
 **1. Choose a prefix.** Say `demo_adw3`. It becomes the ADW name in every log line, so pick
 something you will recognise.
 
-**2. Upload the wallet** into the bucket, in a folder matching the prefix:
+**2. Upload the wallet** into the bucket, in a folder matching the prefix. **Skip this step with
+`flags.use_wallet: false`:**
 
 ```bash
 oci os object put --bucket-name aidp-adw-wallets \
   --name demo_adw3/Wallet_adw3.zip --file ./Wallet_adw3.zip
 ```
 
-**3. Create four secrets** in the Vault, following the same pattern as the existing ones:
+**3. Create the secrets** in the Vault, following the same pattern as the existing ones. The two
+`wallet_*` rows apply only when `flags.use_wallet` is true:
 
 | Secret | Contents |
 |---|---|
@@ -343,8 +343,8 @@ oci os object put --bucket-name aidp-adw-wallets \
 | `demo_adw3_pwd` | password of the administrative user |
 | `demo_adw3_wallet_pwd` | password of the wallet |
 
-**4. Register the four in the Credential Store** as **Vault Reference**, each named exactly like
-its secret, all pointing at the same vault OCID.
+**4. Register them in the Credential Store** as **Vault Reference**, each named exactly like its
+secret, all pointing at the same vault OCID.
 
 **5. Add one line to `adw_sync.yaml`:**
 
@@ -362,14 +362,116 @@ Two things worth checking as the fleet grows:
 
 - **Connections.** `min(fleet, adw_workers_cap) x workers`. With the defaults that is 4 x 8 = 32,
   and it does not grow with fleet size - `adw_workers_cap` is a deliberate cap.
-- **`adw_user`.** If the new ADW uses a different administrative user, `adw_user` accepts a list
-  with one value per ADW in the order of `adw_prefixes`. The count is validated.
+- **`adw_user`.** If the new ADW uses a different administrative user, turn `adw_user` into a
+  mapping keyed by prefix (see [Configuration reference](#configuration-reference)). Prefixes
+  you leave out fall back to `ADMIN`; an unknown key is rejected rather than ignored.
 
 ### Removing an ADW
 
 Delete the line from `adw_prefixes`. The notebook stops touching it; existing external tables keep
 working until you drop them. To clean up, point `CATALOG` at it and run the teardown cell before
 removing the line.
+
+## Walletless TLS
+
+`flags.use_wallet: false` turns the wallet off for the **whole fleet**. It is a global switch and
+not inferred from whether a wallet secret happens to exist - a missing secret is a mistake worth
+seeing, not an instruction to silently change how the job connects.
+
+What it takes:
+
+1. On **every** ADB in the fleet, set **Mutual TLS authentication** to *not required*
+   (Console -> your ADB -> Network -> Edit). This normally requires a network ACL or a private
+   endpoint, so it is a security decision, not just a convenience.
+2. Change each `<prefix>_dsn` secret to the **TLS** connection string from the console. The mTLS
+   descriptor will not work without the wallet.
+3. Set `flags.use_wallet: false`.
+
+Then delete the `<prefix>_wallet_zip` and `<prefix>_wallet_pwd` secrets and their Credential Store
+entries, and the wallet bucket with them. Per ADW that is 4 secrets down to 2.
+
+The connectivity probe at the end of section 3 is what proves the switch worked: it is the only
+place a TLS/mTLS mismatch surfaces before the apply step.
+
+---
+
+## Using a dedicated user instead of ADMIN
+
+**The default is `ADMIN`, and it is the recommended setting.** A dedicated user is worth creating,
+but be clear about what it buys: **not less privilege.**
+
+### Why a dedicated user is still worth it
+
+`adw_user: AIDP_SYNC_ADMIN` (any name) buys separation, not containment:
+
+- the job's credential can be rotated or revoked without touching `ADMIN`, which the whole fleet
+  and every human operator also use;
+- database audit distinguishes what the sync did from what a person did;
+- if the credential leaks, you drop one user instead of rotating `ADMIN` across the fleet.
+
+### Why it is not a privilege reduction
+
+The job **creates one ADW user per source schema and rotates its password on every run**, so it
+needs `CREATE USER` and `ALTER USER`. `ALTER USER` has no scope: whoever holds it can set
+`ADMIN`'s password and connect as `ADMIN` on the next statement. Verified on ADB 23ai - a user
+with no roles at all, holding only the individual grants this job needs, still changes another
+user's password successfully.
+
+So any user that can drive this sync is admin-equivalent. Treat the credential accordingly:
+Vault, no reuse, rotate on staff changes. Do not present it to a security review as a restricted
+account.
+
+The only change that would genuinely reduce authority is architectural - pre-provision the
+schemas out of band so the job never needs `CREATE USER` / `ALTER USER`. That is the same
+direction as the proxy-authentication item in `ARCHITECTURE.md`, and it is not implemented.
+
+### Setting one up
+
+`PDB_DBA` covers almost everything. Two grants are missing and both must be issued by `ADMIN`:
+
+```sql
+CREATE USER AIDP_SYNC_ADMIN IDENTIFIED BY "<password>";
+GRANT CREATE SESSION TO AIDP_SYNC_ADMIN;
+GRANT PDB_DBA        TO AIDP_SYNC_ADMIN;
+
+GRANT EXECUTE ON DBMS_CLOUD TO AIDP_SYNC_ADMIN WITH GRANT OPTION;
+ALTER USER AIDP_SYNC_ADMIN QUOTA UNLIMITED ON DATA;
+```
+
+| Missing grant | How it fails |
+|---|---|
+| `EXECUTE ON DBMS_CLOUD` **with grant option** | `ORA-01031` when the job runs `GRANT EXECUTE ON DBMS_CLOUD TO <schema>`. `PDB_DBA` can *use* `DBMS_CLOUD` but not pass it on, and the job passes it to every schema it provisions |
+| `QUOTA UNLIMITED ON DATA` | `ORA-01950` on the first registry `MERGE`. `CREATE TABLE` succeeds without it - deferred segment creation means the quota only bites on the first insert, so a create-only smoke test misses this |
+
+No role avoids these two. `DBMS_CLOUD` is a public synonym for a package owned by the **common**
+user `C##CLOUD$SERVICE`, and `GRANT ANY OBJECT PRIVILEGE` does not reach a common object from
+inside the PDB - so even a user granted plain `DBA` fails the same check. `ADMIN` works only
+because Oracle grants it directly, per versioned package, with `GRANTABLE = YES`. Quota is a
+per-user attribute, so no role can carry it either.
+
+Two operational notes:
+
+- **After an ADB patch**, the versioned package name changes
+  (`C##CLOUD$SERVICE.DBMS_CLOUD$PDBCS_<version>`). Grant through the synonym, as above, so it
+  re-resolves; if `CREATE_EXTERNAL_TABLE` starts returning `ORA-01031` after a patch window,
+  re-issue the grant.
+- The ADB mandatory password profile **rejects a password containing the user name**
+  (`ORA-28219` / `ORA-20002`). This affects only the user you create by hand; the per-schema
+  passwords the job generates are random.
+
+### Point the registry at the user's own schema
+
+```yaml
+adw_user: AIDP_SYNC_ADMIN
+registry_table: EXT_REGISTRY_V4     # unqualified
+```
+
+Unqualified, `registry_table` resolves to each ADW's own `adw_user` schema, so a fleet using
+different users per ADW keeps its state separated. The default `ADMIN.EXT_REGISTRY_V4` also works
+for a `PDB_DBA` user - it carries the `ANY TABLE` privileges - but there is no reason to depend
+on them.
+
+---
 
 ## Day-two operations
 
@@ -456,7 +558,6 @@ protections are in `ARCHITECTURE.md`, section 7.
 | `ORA-01017` intermittently | two jobs with work in the same schema rotating the password under each other. Run catalogs sequentially |
 | `ORA-06564: DATA_PUMP_DIR` | the `GRANT READ, WRITE ON DIRECTORY DATA_PUMP_DIR` was removed. It is required for reads too |
 | `ORA-12838` | `ALTER SESSION DISABLE PARALLEL DML` did not run. Check `_prep` |
-| Everything prints as `[REDACTED]` | a short, common value was stored in the Vault. Never put `ADMIN` or similar there |
 
 ---
 
@@ -469,7 +570,8 @@ Full commented template in `adw_sync.sample.yaml`.
 | `region` | **required** | Object Storage / lakehouse region, not the ADW's |
 | `oci_credential_prefix` | **required** | prefix of the API key credentials |
 | `adw_prefixes` | **required** | one prefix per ADW |
-| `adw_user` | `ADMIN` | one value for the fleet, or one per ADW |
+| `adw_user` | `ADMIN` | a scalar for the whole fleet, or a mapping keyed by ADW prefix. A positional list is rejected |
+| `flags.use_wallet` | `true` | `false` = walletless TLS; the two `wallet_*` secrets are not read |
 | `naming.table_prefix` | empty | optional prefix on the ADW table name |
 | `naming.cred_name` | `OCI_CRED_<CATALOG>` | credential name inside the ADW |
 | `naming.raw_suffix` | `__RAW` | suffix of the raw table when `create_views` is on |
@@ -485,7 +587,7 @@ Full commented template in `adw_sync.sample.yaml`.
 | `discovery.list_page` | `1000` | objects per listing request; also the API maximum |
 | `discovery.fallback_max_per_schema` | `20` | cap on individual `DESCRIBE` calls per schema |
 | `discovery.exclude_schemas` | see sample | schemas never synced |
-| `registry_table` | `ADMIN.EXT_REGISTRY_V4` | sync state, catalog-scoped |
+| `registry_table` | `ADMIN.EXT_REGISTRY_V4` | sync state, catalog-scoped. Leave **unqualified** when `adw_user` is not `ADMIN` |
 | `acl_privileges` | `[connect]` | network ACL privileges |
 | `vault_key` | `VaultSecretReference` | fixed literal for a Vault Reference |
 | `catalog` | `null` | interactive-testing fallback only; the banner warns when it is used |
