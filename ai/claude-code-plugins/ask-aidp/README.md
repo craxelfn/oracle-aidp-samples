@@ -37,16 +37,45 @@ It provides:
 - Claude Code with the `plugin` subcommand, verified on `2.1.250`.
 - Node.js available to Claude Code (verify with `node --version`).
 - OCI config and credentials that can access the target AIDP instance.
-- The latest `aidp-cli` from
+- AIDP CLI (`aidp`), required for full plugin functionality. Install the latest `aidp-cli` from
   [`oracle-samples/aidataplatform-sdk`](https://github.com/oracle-samples/aidataplatform-sdk),
   either on `PATH` or selected with `AIDP_CLI_BIN`.
 - The latest `aidp-typescript-client` and `oci-common` packages when using the
-  native SDK workspace upload and Git tools.
+  native SDK workspace upload and Git tools; `oci-common` is also required for
+  signed REST calls.
+
+AIDP CLI (`aidp`) and OCI CLI (`oci`) are different tools. Installing OCI CLI
+does not install AIDP CLI. OCI CLI is optional when you configure OCI API-key
+credentials directly as described below. The upstream AIDP installation guide
+includes OCI CLI for credential setup and session-token authentication.
 
 This GitHub directory is the plugin's source distribution. It does **not**
 contain generated `dist/` archives or a vendored `node_modules` tree. The build
 script can create offline archives for a separate release process, but those
 artifacts are not published here.
+
+### Set up and verify AIDP CLI
+
+Before connecting the plugin, follow the
+[AIDP CLI installation instructions](https://github.com/oracle-samples/aidataplatform-sdk#cli)
+to install the CLI and its matching SDK package. Installing this plugin from
+GitHub does not install those dependencies. Then verify in the shell that will
+launch Claude Code:
+
+```sh
+node --version
+aidp --help
+```
+
+If `aidp` is not on `PATH`, set `AIDP_CLI_BIN` to its absolute executable path.
+Verify that executable with `"$AIDP_CLI_BIN" --help` on macOS/Linux or
+`& $env:AIDP_CLI_BIN --help` in PowerShell. Restart Claude Code after changing
+its environment.
+
+Without AIDP CLI, CLI-backed tools such as connection checks, notebook workflows,
+and catalog operations fail. Reference tools may still respond, and direct
+SDK/REST tools can work with their own dependencies and credentials, but that
+does not verify full plugin functionality.
 
 For file work in notebooks, use AIDP Workbench path patterns such as `/Volumes/<catalog>/<schema>/<volume>/<file>`, `/Workspace/<folder>/<file>`, `file:///Volumes/...`, `file:///Workspace/...`, and `oci://<bucket>@<namespace>/<folder-or-file>`.
 
@@ -107,6 +136,27 @@ claude plugin validate ./oracle-aidp-samples/ai/claude-code-plugins/ask-aidp/.cl
 ```
 
 ## Configure
+
+### Configure OCI credentials
+
+For API-key authentication, OCI CLI is not required. Reuse a valid OCI profile or
+follow [Oracle's API signing key instructions](https://docs.oracle.com/en-us/iaas/Content/API/Concepts/apisigningkey.htm#two):
+
+1. Use an IAM user with permission to access the target AIDP resources and upload
+   the public API signing key under that user's API Keys in OCI Console.
+2. Save the generated profile in `~/.oci/config` on macOS/Linux or
+   `%USERPROFILE%\.oci\config` on Windows. Include `user`, `tenancy`,
+   `fingerprint`, `region`, and `key_file`, pointing to the private PEM key.
+3. Restrict private-key access to your user. Set `AIDP_AUTH=api_key` and
+   `OCI_PROFILE` to the profile name; set `OCI_CONFIG_FILE` for a custom location.
+
+If you choose OCI CLI-assisted setup, install
+[OCI CLI](https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/cliinstall.htm)
+and use `oci setup config` for an API-key profile or `oci session authenticate`
+for a session-token profile. CLI calls using a session-token profile need
+`AIDP_AUTH=security_token` and the matching `OCI_PROFILE`.
+
+### Set the plugin environment
 
 Provide AIDP/OCI settings through environment variables in the shell you launch Claude Code
 from. The plugin's `.mcp.json` does not inject environment variables, so the MCP server sees
