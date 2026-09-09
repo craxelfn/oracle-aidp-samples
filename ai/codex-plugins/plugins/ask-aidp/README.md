@@ -10,14 +10,18 @@ This plugin connects Codex to Oracle AI Data Platform Workbench through every do
 - AIDP CLI (`aidp`), required for full plugin functionality. Install the latest `aidp-cli` from
   [`oracle-samples/aidataplatform-sdk`](https://github.com/oracle-samples/aidataplatform-sdk),
   either on `PATH` or selected with `AIDP_CLI_BIN`.
+- OCI CLI (`oci`), required to create the initial token when using the documented
+  session-token authentication flow (`oci session authenticate`). It can be
+  skipped when configuring API-key credentials directly.
 - The latest `aidp-typescript-client` and `oci-common` packages when using the
   native SDK workspace upload and Git tools; `oci-common` is also required for
   signed REST calls.
 
 AIDP CLI (`aidp`) and OCI CLI (`oci`) are different tools. Installing OCI CLI
-does not install AIDP CLI. OCI CLI is optional when you configure OCI API-key
-credentials directly as described below. The upstream AIDP installation guide
-includes OCI CLI for credential setup and session-token authentication.
+does not install AIDP CLI. AIDP CLI defaults to `security_token` unless overridden.
+For API-key authentication, explicitly set `AIDP_AUTH=api_key` so Ask-AIDP passes
+the correct authentication mode to CLI calls. The environment samples below use
+this API-key alternative.
 
 This GitHub directory is the plugin's source distribution. It does **not** contain
 generated `dist/` tarballs, zip files, or a vendored `node_modules` tree. Install the
@@ -125,6 +129,15 @@ Expected: `"ok": true`, 43 MCP tools, 242 CLI commands, and 257 REST operations.
 
 ### Configure OCI credentials
 
+For session-token authentication, install
+[OCI CLI](https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/cliinstall.htm)
+and create the initial token with `oci session authenticate`. Then set
+`AIDP_AUTH=security_token` and `OCI_PROFILE` to the generated profile name before
+launching the assistant. AIDP CLI consumes the existing session credentials;
+setting `AIDP_AUTH` does not create a token or perform the initial login. Follow
+[Oracle's session-token instructions](https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/clitoken.htm)
+to validate, refresh, or reauthenticate the session when needed.
+
 For API-key authentication, OCI CLI is not required. Reuse a valid OCI profile or
 follow [Oracle's API signing key instructions](https://docs.oracle.com/en-us/iaas/Content/API/Concepts/apisigningkey.htm#two):
 
@@ -136,11 +149,8 @@ follow [Oracle's API signing key instructions](https://docs.oracle.com/en-us/iaa
 3. Restrict private-key access to your user. Set `AIDP_AUTH=api_key` and
    `OCI_PROFILE` to the profile name; set `OCI_CONFIG_FILE` for a custom location.
 
-If you choose OCI CLI-assisted setup, install
-[OCI CLI](https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/cliinstall.htm)
-and use `oci setup config` for an API-key profile or `oci session authenticate`
-for a session-token profile. CLI calls using a session-token profile need
-`AIDP_AUTH=security_token` and the matching `OCI_PROFILE`.
+If OCI CLI is already installed, `oci setup config` can also help create an
+API-key profile.
 
 ### Set the plugin environment
 
