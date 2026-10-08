@@ -4,8 +4,8 @@ This plugin connects Codex to Oracle AI Data Platform Workbench through every do
 
 ## Requirements
 
-- Codex CLI with the `plugin` subcommand and Node.js available to Codex. The
-  installation flow is verified on `codex-cli 0.147.0`.
+- Codex CLI with the `plugin` subcommand and Node.js 18 or later available to
+  Codex. The installation flow is verified on `codex-cli 0.147.0`.
 - OCI config and credentials that can access the target AIDP instance.
 - AIDP CLI (`aidp`), required for full plugin functionality. Install the latest `aidp-cli` from
   [`oracle-samples/aidataplatform-sdk`](https://github.com/oracle-samples/aidataplatform-sdk),
@@ -18,10 +18,12 @@ This plugin connects Codex to Oracle AI Data Platform Workbench through every do
   signed REST calls.
 
 AIDP CLI (`aidp`) and OCI CLI (`oci`) are different tools. Installing OCI CLI
-does not install AIDP CLI. AIDP CLI defaults to `security_token` unless overridden.
-For API-key authentication, explicitly set `AIDP_AUTH=api_key` so Ask-AIDP passes
-the correct authentication mode to CLI calls. The environment samples below use
-this API-key alternative.
+does not install AIDP CLI. The AIDP CLI itself defaults to `security_token`. When
+`AIDP_AUTH` is unset, Ask-AIDP's connection check, typed tools, and SDK/REST tools
+default to `api_key`, but the generic `aidp_cli` and `aidp_command_help` tools pass
+no `--auth` flag, so the CLI default applies to them. Set `AIDP_AUTH` explicitly
+(`api_key` or `security_token`) so every tool uses the same mode. The environment
+samples below use the API-key alternative.
 
 This GitHub directory is the plugin's source distribution. It does **not** contain
 generated `dist/` tarballs, zip files, or a vendored `node_modules` tree. Install the
@@ -46,6 +48,17 @@ If `aidp` is not on `PATH`, set `AIDP_CLI_BIN` to its absolute executable path.
 Verify that executable with `"$AIDP_CLI_BIN" --help` on macOS/Linux or
 `& $env:AIDP_CLI_BIN --help` in PowerShell. Restart Codex after changing its
 environment.
+
+For `aidp_rest` and the native SDK workspace upload and Git tools, the MCP server
+loads `oci-common` and `aidp-typescript-client` only from
+`<plugin-root>/vendor/node_modules`, `<plugin-root>/node_modules`, or the directory
+named by `AIDP_VENDOR_NODE_MODULES`, where `<plugin-root>` is the installed
+directory that contains `mcp/ask-aidp-server.mjs`; it does not search the working
+directory or the global npm root. Either run
+`npm install --no-save oci-common /path/to/aidp-typescript-client-1.0.0.tgz` inside
+`<plugin-root>`, or, if you installed those packages globally as the SDK README
+shows, set `AIDP_VENDOR_NODE_MODULES="$(npm root -g)"` (PowerShell:
+`$env:AIDP_VENDOR_NODE_MODULES = (npm root -g)`) in the shell that launches Codex.
 
 Without AIDP CLI, CLI-backed tools such as connection checks, notebook workflows,
 and catalog operations fail. Reference tools may still respond, and direct
