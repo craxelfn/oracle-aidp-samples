@@ -1,0 +1,238 @@
+{
+  "description": "Operations in the AIDP public data-plane API that are live in production but not yet listed in the docs.oracle.com REST endpoint index. Merged into aidp-rest-api-reference.json at load time; an entry is ignored once the generated index publishes the same method and path.",
+  "source": "AIDP public data-plane API spec (/20260430), verified with live OCI-signed requests",
+  "verifiedAt": "2026-11-10",
+  "verification": "Each operation returned a backend response (2xx, 400 validation, or resource NotFound) rather than the gateway route-not-found response. Mutating operations were verified only with requests that fail validation or target a nonexistent deployment.",
+  "categories": [
+    {
+      "id": "mlops",
+      "name": "MLOps",
+      "description": "The operations from the MLOps category.",
+      "operations": [
+        {
+          "name": "(Preview) List registered model permissions",
+          "method": "GET",
+          "path": "/20260430/aiDataPlatforms/{aiDataPlatformId}/mlops/api/2.0/mlflow/registered-models/{registeredModelKey}/permissions",
+          "operationId": "ListAiDataPlatformRegisteredModelPermissions",
+          "documented": false,
+          "verifiedLive": "2026-11-10"
+        },
+        {
+          "name": "(Preview) Manage registered model permission",
+          "method": "POST",
+          "path": "/20260430/aiDataPlatforms/{aiDataPlatformId}/mlops/api/2.0/mlflow/registered-models/{registeredModelKey}/actions/managePermission",
+          "operationId": "ManageAiDataPlatformRegisteredModelPermission",
+          "documented": false,
+          "verifiedLive": "2026-11-10"
+        },
+        {
+          "name": "(Preview) Create a model deployment",
+          "method": "POST",
+          "path": "/20260430/aiDataPlatforms/{aiDataPlatformId}/mlops/api/2.0/model-deployments/create",
+          "operationId": "CreateAiDataPlatformModelDeployment",
+          "documented": false,
+          "verifiedLive": "2026-11-10"
+        },
+        {
+          "name": "(Preview) Search model deployments",
+          "method": "POST",
+          "path": "/20260430/aiDataPlatforms/{aiDataPlatformId}/mlops/api/2.0/model-deployments/search",
+          "operationId": "SearchAiDataPlatformModelDeployments",
+          "documented": false,
+          "verifiedLive": "2026-11-10"
+        },
+        {
+          "name": "(Preview) Get a model deployment",
+          "method": "GET",
+          "path": "/20260430/aiDataPlatforms/{aiDataPlatformId}/mlops/api/2.0/model-deployments/get",
+          "operationId": "GetAiDataPlatformModelDeployment",
+          "documented": false,
+          "verifiedLive": "2026-11-10"
+        },
+        {
+          "name": "(Preview) Get a model deployment contract",
+          "method": "GET",
+          "path": "/20260430/aiDataPlatforms/{aiDataPlatformId}/mlops/api/2.0/model-deployments/contract",
+          "operationId": "GetAiDataPlatformModelDeploymentContract",
+          "documented": false,
+          "verifiedLive": "2026-11-10"
+        },
+        {
+          "name": "(Preview) Update a model deployment",
+          "method": "POST",
+          "path": "/20260430/aiDataPlatforms/{aiDataPlatformId}/mlops/api/2.0/model-deployments/update",
+          "operationId": "UpdateAiDataPlatformModelDeployment",
+          "documented": false,
+          "verifiedLive": "2026-11-10"
+        },
+        {
+          "name": "(Preview) Update model deployment tags",
+          "method": "POST",
+          "path": "/20260430/aiDataPlatforms/{aiDataPlatformId}/mlops/api/2.0/model-deployments/update-tags",
+          "operationId": "UpdateAiDataPlatformModelDeploymentTags",
+          "documented": false,
+          "verifiedLive": "2026-11-10"
+        },
+        {
+          "name": "(Preview) Delete a model deployment",
+          "method": "POST",
+          "path": "/20260430/aiDataPlatforms/{aiDataPlatformId}/mlops/api/2.0/model-deployments/delete",
+          "operationId": "DeleteAiDataPlatformModelDeployment",
+          "documented": false,
+          "verifiedLive": "2026-11-10"
+        },
+        {
+          "name": "(Preview) Activate a model deployment",
+          "method": "POST",
+          "path": "/20260430/aiDataPlatforms/{aiDataPlatformId}/mlops/api/2.0/model-deployments/activate",
+          "operationId": "ActivateAiDataPlatformModelDeployment",
+          "documented": false,
+          "verifiedLive": "2026-11-10"
+        },
+        {
+          "name": "(Preview) Deactivate a model deployment",
+          "method": "POST",
+          "path": "/20260430/aiDataPlatforms/{aiDataPlatformId}/mlops/api/2.0/model-deployments/deactivate",
+          "operationId": "DeactivateAiDataPlatformModelDeployment",
+          "documented": false,
+          "verifiedLive": "2026-11-10"
+        },
+        {
+          "name": "(Preview) Roll a model deployment forward",
+          "method": "POST",
+          "path": "/20260430/aiDataPlatforms/{aiDataPlatformId}/mlops/api/2.0/model-deployments/roll-forward",
+          "operationId": "RollForwardAiDataPlatformModelDeployment",
+          "documented": false,
+          "verifiedLive": "2026-11-10"
+        },
+        {
+          "name": "(Preview) Roll a model deployment back",
+          "method": "POST",
+          "path": "/20260430/aiDataPlatforms/{aiDataPlatformId}/mlops/api/2.0/model-deployments/roll-back",
+          "operationId": "RollBackAiDataPlatformModelDeployment",
+          "documented": false,
+          "verifiedLive": "2026-11-10"
+        },
+        {
+          "name": "(Preview) List model deployment activities",
+          "method": "POST",
+          "path": "/20260430/aiDataPlatforms/{aiDataPlatformId}/mlops/api/2.0/model-deployments/activities/search",
+          "operationId": "ListAiDataPlatformModelDeploymentActivities",
+          "documented": false,
+          "verifiedLive": "2026-11-10"
+        },
+        {
+          "name": "(Preview) Get model deployment activity details",
+          "method": "GET",
+          "path": "/20260430/aiDataPlatforms/{aiDataPlatformId}/mlops/api/2.0/model-deployments/activities/get",
+          "operationId": "GetAiDataPlatformModelDeploymentActivity",
+          "documented": false,
+          "verifiedLive": "2026-11-10"
+        },
+        {
+          "name": "(Preview) Get a registered-model summary",
+          "method": "GET",
+          "path": "/20260430/aiDataPlatforms/{aiDataPlatformId}/mlops/api/2.0/registered-models/summary",
+          "operationId": "GetAiDataPlatformRegisteredModelSummary",
+          "documented": false,
+          "verifiedLive": "2026-11-10"
+        },
+        {
+          "name": "(Preview) Get model deployment inference summary",
+          "method": "GET",
+          "path": "/20260430/aiDataPlatforms/{aiDataPlatformId}/mlops/api/2.0/model-deployments/{deploymentId}/monitoring/inferences/summary",
+          "operationId": "GetAiDataPlatformModelDeploymentInferenceSummary",
+          "documented": false,
+          "verifiedLive": "2026-11-10"
+        },
+        {
+          "name": "(Preview) Search model deployment inferences",
+          "method": "POST",
+          "path": "/20260430/aiDataPlatforms/{aiDataPlatformId}/mlops/api/2.0/model-deployments/{deploymentId}/monitoring/inferences/search",
+          "operationId": "SearchAiDataPlatformModelDeploymentInferences",
+          "documented": false,
+          "verifiedLive": "2026-11-10"
+        },
+        {
+          "name": "(Preview) Get model deployment inference details",
+          "method": "GET",
+          "path": "/20260430/aiDataPlatforms/{aiDataPlatformId}/mlops/api/2.0/model-deployments/{deploymentId}/monitoring/inferences/{requestId}",
+          "operationId": "GetAiDataPlatformModelDeploymentInferenceDetails",
+          "documented": false,
+          "verifiedLive": "2026-11-10"
+        },
+        {
+          "name": "(Preview) Search deployment lifecycle logs",
+          "method": "POST",
+          "path": "/20260430/aiDataPlatforms/{aiDataPlatformId}/mlops/api/2.0/model-deployments/{deploymentId}/monitoring/logs/search",
+          "operationId": "SearchAiDataPlatformDeploymentLogs",
+          "documented": false,
+          "verifiedLive": "2026-11-10"
+        },
+        {
+          "name": "(Preview) Get one deployment log event",
+          "method": "GET",
+          "path": "/20260430/aiDataPlatforms/{aiDataPlatformId}/mlops/api/2.0/model-deployments/{deploymentId}/monitoring/logs/{logId}",
+          "operationId": "GetAiDataPlatformDeploymentLog",
+          "documented": false,
+          "verifiedLive": "2026-11-10"
+        },
+        {
+          "name": "(Preview) Export model deployment inferences to a Volume",
+          "method": "POST",
+          "path": "/20260430/aiDataPlatforms/{aiDataPlatformId}/mlops/api/2.0/model-deployments/{deploymentId}/monitoring/inferences/actions/export",
+          "operationId": "ExportAiDataPlatformModelDeploymentInferences",
+          "documented": false,
+          "verifiedLive": "2026-11-10"
+        }
+      ]
+    },
+    {
+      "id": "private-network-profile",
+      "name": "PrivateNetworkProfile",
+      "description": "The operations from the PrivateNetworkProfile category.",
+      "operations": [
+        {
+          "name": "List private network profiles",
+          "method": "GET",
+          "path": "/20260430/aiDataPlatforms/{aiDataPlatformId}/privateNetworkProfiles",
+          "operationId": "ListAiDataPlatformPrivateNetworkProfiles",
+          "documented": false,
+          "verifiedLive": "2026-11-10"
+        },
+        {
+          "name": "Create a private network profile",
+          "method": "POST",
+          "path": "/20260430/aiDataPlatforms/{aiDataPlatformId}/privateNetworkProfiles",
+          "operationId": "CreateAiDataPlatformPrivateNetworkProfile",
+          "documented": false,
+          "verifiedLive": "2026-11-10"
+        },
+        {
+          "name": "Get a private network profile",
+          "method": "GET",
+          "path": "/20260430/aiDataPlatforms/{aiDataPlatformId}/privateNetworkProfiles/{privateNetworkProfileKey}",
+          "operationId": "GetAiDataPlatformPrivateNetworkProfile",
+          "documented": false,
+          "verifiedLive": "2026-11-10"
+        },
+        {
+          "name": "Update a private network profile",
+          "method": "PUT",
+          "path": "/20260430/aiDataPlatforms/{aiDataPlatformId}/privateNetworkProfiles/{privateNetworkProfileKey}",
+          "operationId": "UpdateAiDataPlatformPrivateNetworkProfile",
+          "documented": false,
+          "verifiedLive": "2026-11-10"
+        },
+        {
+          "name": "Delete a private network profile",
+          "method": "DELETE",
+          "path": "/20260430/aiDataPlatforms/{aiDataPlatformId}/privateNetworkProfiles/{privateNetworkProfileKey}",
+          "operationId": "DeleteAiDataPlatformPrivateNetworkProfile",
+          "documented": false,
+          "verifiedLive": "2026-11-10"
+        }
+      ]
+    }
+  ]
+}

@@ -4,6 +4,35 @@ All notable changes to this plugin are documented here.
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-11-10
+
+### Added
+
+- `aidp_model_deployment` (Preview) for MLOps model deployments: create, get, search,
+  activate, deactivate, roll forward, roll back, delete, activity history, inference
+  summary, and lifecycle logs. It validates 32-character hexadecimal deployment IDs,
+  traffic targets, and `authType`/`authDetails` locally, converts `timeStart`/`timeEnd`
+  to the millisecond ISO 8601 form the service requires (other forms are rejected with
+  "Unable to process JSON input"), and sends requests through `aidp_rest` signing.
+- `assets/aidp-rest-api-supplement.json`: 27 operations of the public `/20260430` API
+  that are served in production but missing from Oracle's REST endpoint index — 22
+  MLOps model-deployment, monitoring, and registered-model permission operations, and
+  5 private network profile operations. The server merges them into the REST catalog at
+  load time, so `aidp_rest` and `aidp_rest_api_reference` cover 298 operations across
+  20 categories. Generated index entries replace supplement entries with the same
+  method and path.
+- QA checks for the supplement merge, REST planning of every supplement operation, and
+  `aidp_model_deployment` request planning and validation.
+
+### Verified
+
+- Every supplement operation returned a backend response (2xx, 400 validation, or
+  resource NotFound) to live OCI-signed requests on 2026-11-10. Mutating operations
+  were exercised only with requests that fail validation or target a nonexistent
+  deployment; a full create-to-delete deployment cycle has not been run.
+- `monitoring/inferences/actions/export-all` is excluded: it is in the API
+  specification but production returns the gateway route-not-found response.
+
 ### Security
 - The MCP server resolves `oci-common` and `aidp-typescript-client` only from the plugin's
   own `vendor/node_modules` / `node_modules` (or `AIDP_VENDOR_NODE_MODULES`), no longer from
