@@ -571,7 +571,7 @@ const TOOLS = [
   },
   {
     name: 'aidp_model_deployment',
-    description: '(Preview) Manage MLOps model deployments that serve registered MLflow models: create, get status, search, activate, deactivate, roll forward or back between model versions, delete, list activity history, and read inference summaries and lifecycle logs. Validates deployment IDs and request bodies locally, then sends an OCI-signed REST request. Use dryRun to preview.',
+    description: '(Preview) Manage MLOps model deployments that serve registered MLflow models: create, get status, search, activate, deactivate, roll forward or back between model versions, delete, list activity history, and read inference summaries and lifecycle logs. Validates deployment IDs and request bodies locally, then sends an OCI-signed REST request. activate, deactivate, roll_forward, and roll_back are asynchronous (HTTP 202): poll get or activities for the outcome, and expect HTTP 409 while another operation on the same deployment is in progress. Use dryRun to preview.',
     inputSchema: {
       type: 'object',
       additionalProperties: false,

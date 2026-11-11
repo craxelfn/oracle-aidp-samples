@@ -27,9 +27,16 @@ All notable changes to this plugin are documented here.
 ### Verified
 
 - Every supplement operation returned a backend response (2xx, 400 validation, or
-  resource NotFound) to live OCI-signed requests on 2026-11-10. Mutating operations
-  were exercised only with requests that fail validation or target a nonexistent
-  deployment; a full create-to-delete deployment cycle has not been run.
+  resource NotFound) to live OCI-signed requests on 2026-11-10.
+- A full lifecycle ran through `aidp_model_deployment` on a temporary AI Compute on
+  2026-11-11: create (201), activate (202), roll_forward (202, SUCCESS), roll_back
+  (202, SUCCESS), inference_summary (200), deactivate (202), activities (200),
+  delete (204), and get after delete (404). Activation itself ended in FAILURE twice
+  with the service's "internal platform error" status message, so a deployment never
+  reached ACTIVE and inference and log content could not be exercised; `logs`
+  returned HTTP 503 ("log source scope cannot be resolved yet") for that deployment.
+- Lifecycle actions are asynchronous (HTTP 202); a concurrent action on the same
+  deployment returns HTTP 409.
 - `monitoring/inferences/actions/export-all` is excluded: it is in the API
   specification but production returns the gateway route-not-found response.
 
